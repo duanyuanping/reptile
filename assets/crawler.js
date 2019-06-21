@@ -1,4 +1,5 @@
 const superagent = require('superagent');
+const axios = require('axios');
 const cheerio = require('cheerio');
 const charset = require('superagent-charset');
 
@@ -20,10 +21,10 @@ module.exports = class Crawler {
   queue(url) {
     // 处理多个 url 字符串数组
     if (Array.isArray(url)) {
-      return this.fetchUrl(url);
+      return this.fetchData(url);
     // 处理单个 url 字符串
     } else if (typeof url === 'string') {
-      return this.fetchUrl([url]);
+      return this.fetchData([url]);
     }
   }
 
@@ -33,23 +34,21 @@ module.exports = class Crawler {
    * @returns {Promise} 
    * @memberof Crawler
    */
-  async fetchUrl(urls) {
-    const tasks = urls.map(url => parallelNum => new Promise((resolve, reject) => {
-      superagent
+  async fetchData(urls) {
+    const tasks = urls.map(url => parallelNum => {
+      return superagent
         .get(url)
         .charset('gb2312')
-        .end((err, data) => {
-          if (err) {
-            this.callback(err);
-            reject(err);
-          }
-  
+        .then(data => {
           const $ = cheerio.load(data.text, { decodeEntities: false });
-  
-          this.callback(err, { ...data, $ });
-          resolve({ ...data, $ });
-        });
-      }));
+          this.callback(undefined, { ...data, $ });
+          return({ ...data, $ });
+        })
+        .catch(err => {
+          this.callback(err);
+          return Promise.reject(err);
+        })
+      });
 
     const result = await this.runLimit(tasks);
     if (urls.length < 2) {

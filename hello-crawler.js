@@ -29,28 +29,25 @@ const fetchContent = async () => {
       // }
     });
     
-    return c.queue(mainUrl).then((res, done) => {
-      // if (err) {
-      //   return console.log('//////////////////// fetch base info error /////////////////', err);
-      // }
-  
-      const $ = res.$;
-      const urls = $('#list a');
+    return c.queue(mainUrl)
+      .then((res, done) => {
+        const $ = res.$;
+        const urls = $('#list a');
 
-      infos.title = $('#maininfo #info h1').text();
-      infos.author = $('#maininfo #info p').eq(0).text().split('：')[1];
-      infos.chapters = [];
+        infos.title = $('#maininfo #info h1').text();
+        infos.author = $('#maininfo #info p').eq(0).text().split('：')[1];
+        infos.chapters = [];
 
-      for (let i = 0; i < urls.length; i++) {
-        infos.chapters.push({
-          href: $(urls[i]).attr('href'),
-          title: $(urls[i]).text()
-        })
-      }
+        for (let i = 0; i < urls.length; i++) {
+          infos.chapters.push({
+            href: $(urls[i]).attr('href'),
+            title: $(urls[i]).text()
+          })
+        }
 
-      // resolve(infos);
-      return infos
-    });
+        return infos
+      })
+      .catch(err => console.log('//////////////////// fetch base info error /////////////////', err))
   };
   
   const baseInfo = await handleGetBaseInfo();
