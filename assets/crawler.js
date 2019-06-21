@@ -1,9 +1,6 @@
-const superagent = require('superagent');
-const axios = require('axios');
 const cheerio = require('cheerio');
-const charset = require('superagent-charset');
-
-charset(superagent);
+const iconvLite = require('iconv-lite');
+const request = require('request');
 
 module.exports = class Crawler {
   constructor(params) {
@@ -21,10 +18,10 @@ module.exports = class Crawler {
   queue(url) {
     // 处理多个 url 字符串数组
     if (Array.isArray(url)) {
-      return this.fetchData(url);
+      return this.fetchContent(url);
     // 处理单个 url 字符串
     } else if (typeof url === 'string') {
-      return this.fetchData([url]);
+      return this.fetchContent([url]);
     }
   }
 
@@ -34,21 +31,20 @@ module.exports = class Crawler {
    * @returns {Promise} 
    * @memberof Crawler
    */
-  async fetchData(urls) {
-    const tasks = urls.map(url => parallelNum => {
-      return superagent
-        .get(url)
-        .charset('gb2312')
-        .then(data => {
-          const $ = cheerio.load(data.text, { decodeEntities: false });
-          this.callback(undefined, { ...data, $ });
-          return({ ...data, $ });
-        })
-        .catch(err => {
-          this.callback(err);
-          return Promise.reject(err);
-        })
-      });
+  async fetchContent(urls) {
+    const tasks = urls.map(url => parallelNum => new Promise((resolve, reject) => {
+      const options = {
+        url,
+        encoding: null
+      };
+      const response = (err, res) => {
+        const result = this.doEncoding(res);
+        const $ = result.isHtmlType ? cheerio.load(result.str) : null;
+        resolve({ ...res, $, body: result.str });
+      };
+
+      request(options, response);
+    }));
 
     const result = await this.runLimit(tasks);
     if (urls.length < 2) {
@@ -56,6 +52,34 @@ module.exports = class Crawler {
     } else {
       return Promise.all(result);
     }
+  }
+
+  /**
+   * @desc 将请求的数据解码
+   * @param {*} res
+   * @returns {Object} isHtmlType 文件类型，str 解码后的内容
+   */
+  doEncoding(res) {
+    // 判断请求的文件是否是 html 文件
+    const isHtmlType = res.headers['content-type'].indexOf('text/html') > -1;
+    const body = res.body;
+    const str = body.toString();
+
+    if (!isHtmlType) {
+      console.log('file type is not html');
+      return {
+        isHtmlType,
+        str: Buffer.isBuffer(body) ? str : body
+      }
+    }
+
+    // 获取文件编码格式
+    const charset = (str && str.match(/charset=['"]?([\w.-]+)/i) || [0, null])[1]; // 本段正则来自 https://www.npmjs.com/package/crawler 库 
+    
+    return {
+      isHtmlType,
+      str: iconvLite.decode(body, charset)
+    };
   }
 
   /**

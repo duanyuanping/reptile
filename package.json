@@ -14,8 +14,11 @@
     "cheerio": "^1.0.0-rc.3",
     "crawler": "^1.2.1",
     "express": "^4.17.1",
+    "iconv-lite": "^0.4.24",
     "jsdom": "^15.1.1",
     "nightmare": "^3.0.2",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.4",
     "superagent": "^5.0.7",
     "superagent-charset": "^1.2.0"
   }
