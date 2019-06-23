@@ -30,7 +30,7 @@ const fetchContent = async () => {
     });
     
     return c.queue(mainUrl)
-      .then((res, done) => {
+      .then(res => {
         const $ = res.$;
         const urls = $('#list a');
 
@@ -51,11 +51,11 @@ const fetchContent = async () => {
   };
   
   const baseInfo = await handleGetBaseInfo();
-  console.log(baseInfo)
+  // console.log(baseInfo)
   const handleGetContent = async info => {
     let content = null;
-    const url = `${mainUrl}${info.href}`;
-    // console.log(url)
+    const urls = info.map(item => `${mainUrl}${item.href}`);
+
     const c = new Crawler({
       maxConnections: 10,
       callback: (err, res, done) => {
@@ -64,6 +64,7 @@ const fetchContent = async () => {
         }
   
         const $ = res.$;
+        console.log($)
         const html = $('#content').html();
   
         content = {
@@ -71,14 +72,14 @@ const fetchContent = async () => {
           content: html
         }
 
-        // console.log(content)
+        console.log(content)
       }
     })
   
-    c.queue(url);
+    c.queue(urls);
   }
   
-  handleGetContent(baseInfo.chapters[1])
+  handleGetContent(baseInfo.chapters.slice(0, 20))
 }
 
 fetchContent();
