@@ -4,7 +4,7 @@
 const Crawler = require('./assets/crawler');
 
 const c = new Crawler({
-  // isStatic: false
+  isStatic: false
 });
 
 c
@@ -13,5 +13,5 @@ c
     const { $, page, browser } = data;
     console.log($('div.groom-module').length)
     // console.log($('#g_iframe'))
-    // browser.close();
+    browser.close();
   })

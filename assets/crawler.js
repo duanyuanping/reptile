@@ -68,10 +68,7 @@ module.exports = class Crawler {
       const page = await browser.newPage();
       await page.goto(url);
       const dom = await page.$eval('html', html => html.outerHTML);
-      const $ = cheerio.load(dom, 'utf-8');
-      // const iframes = await page.frames().find(f => f.name() === 'contentFrame');
-      // const frame = await iframes.$eval('html', html => html.outerHTML)
-      // console.log(frame);
+      const $ = cheerio.load(dom);
       resolve({ $, page, browser });
     });
 
