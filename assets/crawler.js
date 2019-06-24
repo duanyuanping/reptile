@@ -53,7 +53,7 @@ module.exports = class Crawler {
       request(options, response);
     });
 
-    return this.doRunLimist(urls, fn);
+    return this._doRunLimist(urls, fn);
   }
 
   /**
@@ -72,7 +72,7 @@ module.exports = class Crawler {
       resolve({ $, page, browser });
     });
 
-    return this.doRunLimist(urls, fn);
+    return this._doRunLimist(urls, fn);
   }
 
   /**
@@ -81,7 +81,7 @@ module.exports = class Crawler {
    * @param {Function} fn 各自业务处理逻辑
    * @returns 如果 urls 的 length 为 1，返回 { res, $, err },；如果 length 大于 1，返回  [{res, $, err}, ...]
    */
-  async doRunLimist(urls, fn) {
+  async _doRunLimist(urls, fn) {
     const tasks = urls.map(url => parallelNum => {
       console.log('当前并发量：', parallelNum, url);
       return fn(url, parallelNum);
