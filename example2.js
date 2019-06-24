@@ -4,13 +4,14 @@
 const Crawler = require('./assets/crawler');
 
 const c = new Crawler({
-  isStatic: false
+  // isStatic: false
 });
 
 c
-  .queue('https://music.163.com/#/discover/playlist/')
+  .queue('https://www.bilibili.com')
   .then(async data => {
     const { $, page, browser } = data;
+    console.log($('div.groom-module').length)
     // console.log($('#g_iframe'))
     // browser.close();
   })

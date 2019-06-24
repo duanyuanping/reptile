@@ -46,7 +46,7 @@ module.exports = class Crawler {
       };
       const response = (err, res) => {
         const result = this._doEncoding(res);
-        const $ = result.isHtmlType ? cheerio.load(result.str) : null;
+        const $ = result.isHtmlType !== -1 ? cheerio.load(result.str) : null;
         resolve({ ...res, $, body: result.str });
       };
 
@@ -108,11 +108,12 @@ module.exports = class Crawler {
    */
   _doEncoding(res) {
     // 判断请求的文件是否是 html 文件
-    const isHtmlType = res.headers['content-type'].indexOf('text/html') > -1;
+    const contentType = res.headers['content-type'];
+    const isHtmlType = contentType && contentType.indexOf('text/html') > -1;
     const body = res.body;
     const str = body.toString();
 
-    if (!isHtmlType) {
+    if (isHtmlType === -1) {
       console.log('/////////////// file type is not html ////////////');
       return {
         isHtmlType,
@@ -132,7 +133,7 @@ module.exports = class Crawler {
   /**
    * @desc 限制并行运行数量
    * @param {Array} arr 需要运行的任务数组，数组中的元素是 Promise 实例
-   * @returns {Array} 数组元素是 Promise 实例
+   * @returns {Promise}
    * @memberof Crawler
    */
   _runLimit(arr) {
@@ -146,7 +147,11 @@ module.exports = class Crawler {
     return new Promise((resolve, reject) => {
       const fn = () => {
         setImmediate(() => {
-          if (tasks.length < 1) resolve(result);
+          if (tasks.length < 1) {
+            return Promise
+              .all(result)
+              .then(data => resolve(data));
+          }
 
           while(parallelNum < limit && tasks.length > 0) {
             const task = tasks.shift();
